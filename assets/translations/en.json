@@ -1,0 +1,36 @@
+{
+    "title": "Button Display Latency Test",
+    "buttons": {
+        "clearLogs": "Clear Logs",
+        "syncPulse": "Sync Pulse", 
+        "startSync": "Start Sync",
+        "stopSync": "Stop Sync",
+        "exportLogs": "Export Logs"
+    },
+    "buttonTypes": {
+        "GestureDetectorTapButton": "GestureDetector Tap",
+        "GestureDetectorTapDownButton": "GestureDetector TapDown",
+        "RawGestureDetectorTapButton": "RawGestureDetector Tap",
+        "GestureDetectorPanDownButton": "GestureDetector PanDown",
+        "ListenerPointerDownButton": "Listener PointerDown"
+    },
+    "console": {
+        "exportedLogsHeader": "=== EXPORTED LOGS ===",
+        "exportedLogsFooter": "=== END LOGS ===",
+        "buttonPressed": "Button pressed!",
+        "highRefreshRateSuccess": "High refresh rate requested successfully.",
+        "highRefreshRateFailed": "Failed to enable high refresh rate",
+        "highRefreshRateError": "Error requesting high refresh rate: {error}"
+    },
+    "accessibility": {
+        "buttonTypeDropdown": "Select button implementation type",
+        "clearLogsButton": "Clear all logged events",
+        "syncPulseButton": "Generate single sync pulse",
+        "startSyncButton": "Start continuous sync pulses",
+        "stopSyncButton": "Stop sync pulse generation", 
+        "exportLogsButton": "Export timing data to console",
+        "testButton": "Main test button - tap to measure latency",
+        "pressIndicator": "Visual indicator for button press",
+        "syncIndicator": "Visual indicator for sync pulses"
+    }
+}

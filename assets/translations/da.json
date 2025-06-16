@@ -1,0 +1,36 @@
+{
+    "title": "Knap Display Latenstidstest",
+    "buttons": {
+        "clearLogs": "Ryd Logs",
+        "syncPulse": "Sync Puls", 
+        "startSync": "Start Sync",
+        "stopSync": "Stop Sync",
+        "exportLogs": "Eksporter Logs"
+    },
+    "buttonTypes": {
+        "GestureDetectorTapButton": "GestureDetector Tryk",
+        "GestureDetectorTapDownButton": "GestureDetector TrykNed",
+        "RawGestureDetectorTapButton": "RawGestureDetector Tryk",
+        "GestureDetectorPanDownButton": "GestureDetector PanNed",
+        "ListenerPointerDownButton": "Listener PointerNed"
+    },
+    "console": {
+        "exportedLogsHeader": "=== EKSPORTEREDE LOGS ===",
+        "exportedLogsFooter": "=== SLUT LOGS ===",
+        "buttonPressed": "Knap trykket!",
+        "highRefreshRateSuccess": "Høj opdateringshastighed anmodet succesfuldt.",
+        "highRefreshRateFailed": "Kunne ikke aktivere høj opdateringshastighed",
+        "highRefreshRateError": "Fejl ved anmodning om høj opdateringshastighed: {error}"
+    },
+    "accessibility": {
+        "buttonTypeDropdown": "Vælg knap implementeringstype",
+        "clearLogsButton": "Ryd alle loggede hændelser",
+        "syncPulseButton": "Generer enkelt sync puls",
+        "startSyncButton": "Start kontinuerlige sync pulser",
+        "stopSyncButton": "Stop sync puls generering", 
+        "exportLogsButton": "Eksporter timing data til konsol",
+        "testButton": "Hoved test knap - tryk for at måle latenstid",
+        "pressIndicator": "Visuel indikator for knap tryk",
+        "syncIndicator": "Visuel indikator for sync pulser"
+    }
+}
