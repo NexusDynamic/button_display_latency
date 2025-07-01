@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 
 abstract class BaseButton extends StatelessWidget {
   final VoidCallback onPressed;
+  final VoidCallback? onReleased;
   final Widget child;
 
-  const BaseButton({super.key, required this.onPressed, required this.child});
+  const BaseButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+    this.onReleased,
+  });
 }
 
 class GestureDetectorTapButton extends BaseButton {
@@ -73,12 +79,15 @@ class GestureDetectorPanDownButton extends BaseButton {
     super.key,
     required super.onPressed,
     required super.child,
+    super.onReleased,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanDown: (_) => onPressed(),
+      onPanCancel: onReleased,
+      onPanEnd: (_) => onReleased?.call(),
       behavior: HitTestBehavior.opaque,
       child: child,
     );
@@ -90,12 +99,14 @@ class ListenerPointerDownButton extends BaseButton {
     super.key,
     required super.onPressed,
     required super.child,
+    super.onReleased,
   });
 
   @override
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (_) => onPressed(),
+      onPointerUp: (_) => onReleased?.call(),
       behavior: HitTestBehavior.opaque,
       child: child,
     );

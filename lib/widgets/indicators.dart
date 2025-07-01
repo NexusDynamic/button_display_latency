@@ -32,10 +32,11 @@ class DirectPressIndicatorState extends State<DirectPressIndicator> {
         SchedulerBinding.instance.scheduleFrameCallback((_) {
           PerformanceLogger.logEvent(EventType.frameStart);
           PerformanceLogger.incrementFrame();
-        }, scheduleNewFrame: true);
+        });
         SchedulerBinding.instance.addPostFrameCallback((_) {
           PerformanceLogger.logEvent(EventType.frameEnd);
         });
+        SchedulerBinding.instance.scheduleFrame();
       }
 
       setState(() {
@@ -116,9 +117,10 @@ class SquarePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (isPressed) {
-      final paint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill;
+      final paint =
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.fill;
 
       canvas.drawRect(Offset.zero & size, paint);
     }

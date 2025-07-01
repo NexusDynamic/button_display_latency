@@ -69,7 +69,7 @@ class ButtonPressService extends StateNotifier<bool> {
 
 class StaticButtonFactory {
   static final pressState = ButtonPressService();
-  static bool autoRelease = true;
+  static bool _autoRelease = true;
   static Duration autoReleaseDelay = Duration(milliseconds: 50);
   static Widget child = SquareButton(
     title: _getButtonTitle('buttonTypes.GestureDetectorTapButton'.tr()),
@@ -87,7 +87,7 @@ class StaticButtonFactory {
     }
     pressState.press();
     pressIndicatorKey.currentState?.setPressed(true);
-    if (autoRelease) {
+    if (_autoRelease) {
       Future.delayed(autoReleaseDelay, () {
         pressState.release();
         pressIndicatorKey.currentState?.setPressed(false);
@@ -121,15 +121,35 @@ class StaticButtonFactory {
     child = SquareButton(title: _getButtonTitle(type)).build();
     switch (type) {
       case 'GestureDetectorTapButton':
+        _autoRelease = true;
         return GestureDetectorTapButton(onPressed: onPressed, child: child);
       case 'GestureDetectorTapDownButton':
+        _autoRelease = true;
         return GestureDetectorTapDownButton(onPressed: onPressed, child: child);
       case 'RawGestureDetectorTapButton':
+        _autoRelease = true;
         return RawGestureDetectorTapButton(onPressed: onPressed, child: child);
       case 'GestureDetectorPanDownButton':
-        return GestureDetectorPanDownButton(onPressed: onPressed, child: child);
+        _autoRelease = false;
+        return GestureDetectorPanDownButton(
+          onPressed: onPressed,
+          onReleased: () {
+            pressState.release();
+            pressIndicatorKey.currentState?.setPressed(false);
+          },
+          child: child,
+        );
+
       case 'ListenerPointerDownButton':
-        return ListenerPointerDownButton(onPressed: onPressed, child: child);
+        _autoRelease = false;
+        return ListenerPointerDownButton(
+          onPressed: onPressed,
+          onReleased: () {
+            pressState.release();
+            pressIndicatorKey.currentState?.setPressed(false);
+          },
+          child: child,
+        );
       default:
         throw ArgumentError('Unknown button type: $type');
     }
