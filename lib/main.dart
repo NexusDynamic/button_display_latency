@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_fullscreen/flutter_fullscreen.dart';
 import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
 import 'package:flutter_state_notifier/flutter_state_notifier.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart' show WakelockPlus;
 import 'widgets/buttons.dart';
@@ -43,6 +44,8 @@ void main() async {
 
   // Initialize localization first
   await EasyLocalization.ensureInitialized();
+
+  await Permission.ignoreBatteryOptimizations.request();
 
   // Enable full screen mode for maximum measurement area
   await FullScreen.ensureInitialized();
