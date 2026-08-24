@@ -74,13 +74,20 @@ void main() async {
   }
 
   runApp(
-    EasyLocalization(
-      supportedLocales: [Locale('en'), Locale('da')],
-      path: 'assets/translations',
-      fallbackLocale: Locale('en'),
-      useOnlyLangCode: true,
-      useFallbackTranslations: true,
-      child: const ButtonDisplayLatencyApp(),
+    ExcludeSemantics(
+      excluding: true,
+      child: TickerMode(
+        enabled: true,
+        forceFrames: true,
+        child: EasyLocalization(
+          supportedLocales: [Locale('en'), Locale('da')],
+          path: 'assets/translations',
+          fallbackLocale: Locale('en'),
+          useOnlyLangCode: true,
+          useFallbackTranslations: true,
+          child: const ButtonDisplayLatencyApp(),
+        ),
+      ),
     ),
   );
 }
@@ -171,8 +178,9 @@ class BDLHome extends StatelessWidget {
                 child: Center(
                   child: RepaintBoundary(
                     child: Consumer<BaseButton>(
-                      builder: (context, button, _) =>
-                          RepaintBoundary(child: button),
+                      builder:
+                          (context, button, _) =>
+                              RepaintBoundary(child: button),
                     ),
                   ),
                 ),
