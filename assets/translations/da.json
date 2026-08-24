@@ -2,7 +2,7 @@
     "title": "Knap Display Latenstidstest",
     "buttons": {
         "clearLogs": "Ryd Logs",
-        "syncPulse": "Sync Puls", 
+        "syncPulse": "Sync Puls",
         "startSync": "Start Sync",
         "stopSync": "Stop Sync",
         "exportLogs": "Eksporter Logs"
@@ -12,7 +12,8 @@
         "GestureDetectorTapDownButton": "GestureDetector TrykNed",
         "RawGestureDetectorTapButton": "RawGestureDetector Tryk",
         "GestureDetectorPanDownButton": "GestureDetector PanNed",
-        "ListenerPointerDownButton": "Listener PointerNed"
+        "ListenerPointerDownButton": "Listener PointerNed",
+        "RawPointerDownButton": "Rå PointerData"
     },
     "console": {
         "exportedLogsHeader": "=== EKSPORTEREDE LOGS ===",
@@ -27,10 +28,14 @@
         "clearLogsButton": "Ryd alle loggede hændelser",
         "syncPulseButton": "Generer enkelt sync puls",
         "startSyncButton": "Start kontinuerlige sync pulser",
-        "stopSyncButton": "Stop sync puls generering", 
+        "stopSyncButton": "Stop sync puls generering",
         "exportLogsButton": "Eksporter timing data til konsol",
         "testButton": "Hoved test knap - tryk for at måle latenstid",
         "pressIndicator": "Visuel indikator for knap tryk",
         "syncIndicator": "Visuel indikator for sync pulser"
+    },
+    "bela": {
+        "mode": "Bela-tilstand",
+        "lsl": "LSL"
     }
 }

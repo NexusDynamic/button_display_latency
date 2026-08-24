@@ -2,7 +2,7 @@
     "title": "Button Display Latency Test",
     "buttons": {
         "clearLogs": "Clear Logs",
-        "syncPulse": "Sync Pulse", 
+        "syncPulse": "Sync Pulse",
         "startSync": "Start Sync",
         "stopSync": "Stop Sync",
         "exportLogs": "Export Logs"
@@ -12,7 +12,8 @@
         "GestureDetectorTapDownButton": "GestureDetector TapDown",
         "RawGestureDetectorTapButton": "RawGestureDetector Tap",
         "GestureDetectorPanDownButton": "GestureDetector PanDown",
-        "ListenerPointerDownButton": "Listener PointerDown"
+        "ListenerPointerDownButton": "Listener PointerDown",
+        "RawPointerDownButton": "Raw PointerData"
     },
     "console": {
         "exportedLogsHeader": "=== EXPORTED LOGS ===",
@@ -27,10 +28,14 @@
         "clearLogsButton": "Clear all logged events",
         "syncPulseButton": "Generate single sync pulse",
         "startSyncButton": "Start continuous sync pulses",
-        "stopSyncButton": "Stop sync pulse generation", 
+        "stopSyncButton": "Stop sync pulse generation",
         "exportLogsButton": "Export timing data to console",
         "testButton": "Main test button - tap to measure latency",
         "pressIndicator": "Visual indicator for button press",
         "syncIndicator": "Visual indicator for sync pulses"
+    },
+    "bela": {
+        "mode": "Bela mode",
+        "lsl": "LSL"
     }
 }

@@ -1,3 +1,4 @@
+import 'native_clock.dart';
 import 'sync_pulse.dart';
 
 /// Types of events that can be logged in the performance testing system.
@@ -9,6 +10,9 @@ import 'sync_pulse.dart';
 /// - [displayStart]: When visual feedback starts (setState called)
 /// - [displayEnd]: When visual feedback ends (setState called)
 /// - [syncPulse]: Sync signal for external device alignment
+/// - [flashRequested]: Photodiode patch repaint requested (Bela protocol)
+/// - [flashPresented]: Frame carrying the patch reached the panel (Bela protocol)
+/// - [sessionStart]/[sessionEnd]: Bela session boundaries
 enum EventType {
   /// Touch input detected by button handler
   touchDetected,
@@ -27,6 +31,18 @@ enum EventType {
 
   /// Synchronization pulse for external device alignment
   syncPulse,
+
+  /// Photodiode patch repaint requested
+  flashRequested,
+
+  /// Frame carrying the photodiode patch was presented
+  flashPresented,
+
+  /// Bela measurement session opened
+  sessionStart,
+
+  /// Bela measurement session closed
+  sessionEnd,
 }
 
 /// A single logged event with precise timing information.
@@ -35,6 +51,8 @@ enum EventType {
 /// - Event type and timestamp for analysis
 /// - Optional button type for comparing different implementations
 /// - Optional frame number for correlating with rendering pipeline
+/// - The LSL clock reading, so a Flutter-side row can be joined directly
+///   against the Bela's CSVs without going through a sync pulse
 class LogEvent {
   /// The type of event that occurred.
   final EventType type;
@@ -43,6 +61,12 @@ class LogEvent {
   ///
   /// Uses [Stopwatch.elapsedMicroseconds] for high precision.
   final int timestampMicros;
+
+  /// The same instant on the LSL clock (`lsl_local_clock`), in seconds.
+  ///
+  /// This is the app's real time base — see [AppClock]. It is what makes a row
+  /// here comparable with a row in the Bela's `_lsl.csv`.
+  final double lslClock;
 
   /// Optional button implementation type that triggered the event.
   ///
@@ -54,24 +78,46 @@ class LogEvent {
   /// Links events to specific frame render cycles.
   final int? frameNumber;
 
+  /// Trial counter shared by every event of one trial (Bela protocol ch2).
+  final int? trial;
+
+  /// Session-wide LSL sample counter for this event, if it was pushed (ch3).
+  final int? seq;
+
+  /// Event-specific extra clocks, seconds on the LSL clock. For
+  /// [EventType.touchDetected] this is the OS touch timestamp; for
+  /// [EventType.flashPresented], the frame's vsync start and raster finish.
+  final double? auxA;
+  final double? auxB;
+
   /// Creates a new log event.
   ///
-  /// The [type] and [timestampMicros] are required. The [buttonType] and
-  /// [frameNumber] are optional and should be provided based on event context.
+  /// The [type] and [timestampMicros] are required. The remaining fields are
+  /// optional and should be provided based on event context.
   LogEvent({
     required this.type,
     required this.timestampMicros,
+    this.lslClock = 0.0,
     this.buttonType,
     this.frameNumber,
+    this.trial,
+    this.seq,
+    this.auxA,
+    this.auxB,
   });
+
+  static String _clock(double? value) =>
+      value == null || value == 0.0 ? '' : value.toStringAsFixed(9);
 
   /// Returns a CSV-formatted string representation of this event.
   ///
-  /// Format: `eventType,timestampMicros,buttonType,frameNumber`
+  /// Format: `eventType,timestampMicros,buttonType,frameNumber,lslClock,trial,seq,auxA,auxB`
   /// Empty fields are represented as empty strings.
   @override
   String toString() =>
-      '$type,$timestampMicros,${buttonType ?? ''},${frameNumber ?? ''}';
+      '$type,$timestampMicros,${buttonType ?? ''},${frameNumber ?? ''},'
+      '${_clock(lslClock)},${trial ?? ''},${seq ?? ''},'
+      '${_clock(auxA)},${_clock(auxB)}';
 }
 
 /// High-performance event logging system for latency measurement.
@@ -92,13 +138,16 @@ class PerformanceLogger {
   /// Internal list of logged events. Use [getEvents] for safe access.
   static final List<LogEvent> _events = <LogEvent>[];
 
-  static String buttonType = 'GestureDetectorTapButton';
+  static String buttonType = 'RawPointerDownButton';
 
   /// Current frame counter for correlating events with render cycles.
   static int _frameCounter = 0;
 
   /// High-precision stopwatch for microsecond timing.
   static final Stopwatch _stopwatch = Stopwatch()..start();
+
+  /// Session metadata written above the CSV rows on export.
+  static final Map<String, String> sessionMetadata = <String, String>{};
 
   /// Logs a new event with the current timestamp.
   ///
@@ -108,20 +157,40 @@ class PerformanceLogger {
   /// Parameters:
   /// - [type]: The type of event being logged
   /// - [buttonType]: Optional button implementation identifier for comparison
+  /// - [lslClock]: The LSL-clock instant this event refers to. When omitted,
+  ///   the clock is read now; pass it explicitly when the event was observed
+  ///   earlier (a touch already timestamped, a frame already presented) so the
+  ///   row carries the observation time rather than the logging time.
   ///
   /// Example:
   /// ```dart
   /// PerformanceLogger.logEvent(EventType.touchDetected, buttonType: 'GestureDetector');
   /// ```
-  static void logEvent(EventType type, {String? buttonType}) {
+  static void logEvent(
+    EventType type, {
+    String? buttonType,
+    double? lslClock,
+    int? trial,
+    int? seq,
+    double? auxA,
+    double? auxB,
+    int? frameNumber,
+  }) {
     _events.add(
       LogEvent(
         type: type,
         timestampMicros: _stopwatch.elapsedMicroseconds,
+        lslClock: lslClock ?? AppClock.now(),
         buttonType: buttonType ?? PerformanceLogger.buttonType,
-        frameNumber: type == EventType.frameStart || type == EventType.frameEnd
-            ? _frameCounter
-            : null,
+        frameNumber:
+            frameNumber ??
+            (type == EventType.frameStart || type == EventType.frameEnd
+                ? _frameCounter
+                : null),
+        trial: trial,
+        seq: seq,
+        auxA: auxA,
+        auxB: auxB,
       ),
     );
   }
@@ -150,14 +219,17 @@ class PerformanceLogger {
 
   /// Exports all logged events as CSV data.
   ///
-  /// Returns a string containing CSV-formatted data with headers:
-  /// `EventType,TimestampMicros,ButtonType,FrameNumber`
-  ///
-  /// This format is suitable for analysis in spreadsheet applications
-  /// or data analysis tools.
+  /// Rows are preceded by `# key=value` comment lines carrying the session
+  /// metadata — most importantly the measured clock offsets, without which the
+  /// `auxA`/`auxB` columns cannot be interpreted.
   static String exportCsv() {
     final buffer = StringBuffer();
-    buffer.writeln('EventType,TimestampMicros,ButtonType,FrameNumber');
+    for (final entry in sessionMetadata.entries) {
+      buffer.writeln('# ${entry.key}=${entry.value}');
+    }
+    buffer.writeln(
+      'EventType,TimestampMicros,ButtonType,FrameNumber,LslClock,Trial,Seq,AuxA,AuxB',
+    );
     for (final event in _events) {
       buffer.writeln(event.toString());
     }

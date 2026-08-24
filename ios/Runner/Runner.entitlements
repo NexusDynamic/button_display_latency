@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Only needed if the Bela cannot list this iPad in its lsl_api.cfg
+	     KnownPeers, i.e. if stream resolution has to fall back to multicast.
+	     Requires Apple's approval for the multicast entitlement, and must be
+	     wired into the Runner target in Xcode (Signing & Capabilities ->
+	     + Capability -> Multicast Networking) before it has any effect. -->
+	<key>com.apple.developer.networking.multicast</key>
+	<true/>
+</dict>
+</plist>

@@ -1,11 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_state_notifier/flutter_state_notifier.dart';
 import '../core/logging.dart';
 import '../core/sync_pulse.dart';
+import '../core/timing_session.dart';
 import 'button_types.dart';
 import 'indicators.dart';
+import 'raw_pointer_button.dart';
 
 class SquareButton {
   final double size;
@@ -72,19 +73,32 @@ class StaticButtonFactory {
   static bool _autoRelease = true;
   static Duration autoReleaseDelay = Duration(milliseconds: 50);
   static Widget child = SquareButton(
-    title: _getButtonTitle('buttonTypes.GestureDetectorTapButton'.tr()),
+    title: _getButtonTitle('RawPointerDownButton'),
   ).build();
   static final GlobalKey<DirectPressIndicatorState> pressIndicatorKey =
       GlobalKey();
 
-  static VoidCallback onPressed = () {
-    PerformanceLogger.logEvent(
-      EventType.touchDetected,
+  /// The single entry point for every button implementation.
+  ///
+  /// The clock reading arrives from the button itself rather than being taken
+  /// here, so nothing between the input callback and this line lands inside
+  /// the measurement.
+  static void onPressed(double observedClock, int hardwareMicros) {
+    final session = TimingSession.instance;
+    final trial = session.registerTouch(
+      observedClock: observedClock,
+      hardwareMicros: hardwareMicros,
       buttonType: _currentButtonType,
     );
-    if (kDebugMode) {
-      print('Button pressed!');
+    // Rejected by the inter-trial lockout: logged, but no trial and no flash.
+    if (trial < 0) return;
+
+    if (session.belaMode) {
+      // The photodiode patch is the only thing that should change on screen;
+      // the legacy indicator would add an unrelated rebuild to the same frame.
+      return;
     }
+
     pressState.press();
     pressIndicatorKey.currentState?.setPressed(true);
     if (_autoRelease) {
@@ -93,14 +107,26 @@ class StaticButtonFactory {
         pressIndicatorKey.currentState?.setPressed(false);
       });
     }
-  };
+  }
 
-  static String _currentButtonType = 'GestureDetectorTapButton';
+  static void _release() {
+    pressState.release();
+    pressIndicatorKey.currentState?.setPressed(false);
+  }
+
+  /// Defaults to the lowest-latency implementation; the dropdown exists to
+  /// measure how much the others cost.
+  static String _currentButtonType = 'RawPointerDownButton';
+
+  /// The button implementation currently under test.
+  static String get currentButtonType => _currentButtonType;
+
   static final button = ButtonService(
-    GestureDetectorTapButton(
+    RawPointerDownButton(
       onPressed: onPressed,
+      onReleased: _release,
       child: SquareButton(
-        title: 'buttonTypes.GestureDetectorTapButton'.tr(),
+        title: _getButtonTitle('RawPointerDownButton'),
       ).build(),
     ),
   );
@@ -118,6 +144,7 @@ class StaticButtonFactory {
 
   static BaseButton createButton({required String type}) {
     _currentButtonType = type;
+    PerformanceLogger.buttonType = type;
     child = SquareButton(title: _getButtonTitle(type)).build();
     switch (type) {
       case 'GestureDetectorTapButton':
@@ -133,10 +160,7 @@ class StaticButtonFactory {
         _autoRelease = false;
         return GestureDetectorPanDownButton(
           onPressed: onPressed,
-          onReleased: () {
-            pressState.release();
-            pressIndicatorKey.currentState?.setPressed(false);
-          },
+          onReleased: _release,
           child: child,
         );
 
@@ -144,10 +168,15 @@ class StaticButtonFactory {
         _autoRelease = false;
         return ListenerPointerDownButton(
           onPressed: onPressed,
-          onReleased: () {
-            pressState.release();
-            pressIndicatorKey.currentState?.setPressed(false);
-          },
+          onReleased: _release,
+          child: child,
+        );
+
+      case 'RawPointerDownButton':
+        _autoRelease = false;
+        return RawPointerDownButton(
+          onPressed: onPressed,
+          onReleased: _release,
           child: child,
         );
       default:
@@ -159,9 +188,17 @@ class StaticButtonFactory {
   static void clearLogs() {
     PerformanceLogger.clear();
     PreciseSyncPulseGenerator.clearSyncEvents();
+    TimingSession.instance.resetTrials();
   }
 
-  static String exportLogs() => PerformanceLogger.exportCsv();
+  static String exportLogs() {
+    // Re-read the session so the exported header carries the pointer-epoch
+    // cross-check, which only exists once a touch has happened.
+    PerformanceLogger.sessionMetadata
+      ..clear()
+      ..addAll(TimingSession.instance.sessionMetadata());
+    return PerformanceLogger.exportCsv();
+  }
   static List<LogEvent> getLogs() => PerformanceLogger.getEvents();
   static void generateSyncPulse() => PerformanceLogger.generateSyncPulse();
 

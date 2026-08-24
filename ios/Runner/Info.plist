@@ -45,6 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_liblsl._tcp</string>
+		<string>_liblsl._udp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Allows the timing stream to reach the Bela measurement rig on the local network.</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>

@@ -31,6 +31,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Used directly by lib/core/native_clock.dart to read the POSIX clocks the
+  # OS touch and engine frame timestamps live on.
+  ffi: ^2.1.4
+
   flutter_refresh_rate_control: ^0.0.7+0
   easy_localization: ^3.0.7+1
   wakelock_plus: ^1.7.0
