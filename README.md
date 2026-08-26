@@ -122,12 +122,18 @@ startup defaults come from `--dart-define`.
 
 ### Running a session
 
+- 192.168.42.101 is the bela ip
+- 192.168.42.130 is padme's ip
+
 ```sh
-flutter run --release \
+# build for padme
+fvm flutter build ios --release \
   --dart-define=LSL_ENABLED=true \
-  --dart-define=DEVICE_MODEL='iPad Pro 11 M4' \
-  --dart-define=LSL_SOURCE_ID=ipad-pro-11-a \
-  --dart-define=LSL_KNOWN_PEERS=192.168.1.20
+  --dart-define=DEVICE_MODEL='iPad Pro M4' \
+  --dart-define=LSL_SOURCE_ID=ipad-padme \
+  --dart-define=LSL_KNOWN_PEERS=192.168.42.130,192.168.42.101
+# install on padme
+fvm flutter -dpad install --release
 ```
 
 | define | default | meaning |
